@@ -231,6 +231,4 @@ select_menu_list() {
         fi
     fi
 }
-
-# start 
 select_menu_list
