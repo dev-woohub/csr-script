@@ -405,12 +405,12 @@ select_menu_list() {
         if [ $SELECTED -eq 1 ]
         then
             cat commingsoon
-            ((COUNT-=1))
+            ((COUNT-=2))
             select_menu_list
         elif [ $SELECTED -eq 2 ]
         then
             cat commingsoon
-            ((COUNT-=1))
+            ((COUNT-=2))
             select_menu_list
         fi
     fi
