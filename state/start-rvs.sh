@@ -20,19 +20,22 @@ ESC=`printf "\033"`;
 
 mkdir_backup_dir() {
     echo "[START TASK1] Create CSR-RVS Directory"
-    if [ ! -d /$HOME_DIR/$CSR_RVS_DIR ]; then
+    if [ ! -d /$HOME_DIR/$CSR_RVS_DIR ]; 
+    then
         mkdir /$HOME_DIR/$CSR_RVS_DIR
         echo "[CREATE TASK1-1] /$HOME_DIR/$CSR_RVS_DIR"
     else
         echo "[PASS TASK1-1] /$HOME_DIR/$CSR_RVS_DIR Directory already exists"
     fi
-    if [ ! -d /$HOME_DIR/$CSR_RVS_DIR/$CSR_RVS_STATUS_BACKUP_DIR ]; then
+    if [ ! -d /$HOME_DIR/$CSR_RVS_DIR/$CSR_RVS_STATUS_BACKUP_DIR ]; 
+    then
         mkdir /$HOME_DIR/$CSR_RVS_DIR/$CSR_RVS_STATUS_BACKUP_DIR
         echo "[CREATE TASK1-2] /$HOME_DIR/$CSR_RVS_DIR/$CSR_RVS_STATUS_BACKUP_DIR"
     else
         echo "[PASS TASK1-2] /$HOME_DIR/$CSR_RVS_DIR/$CSR_RVS_STATUS_BACKUP_DIR Directory already exists"
     fi
-    if [ ! -d /$HOME_DIR/$CSR_RVS_DIR/$CSR_RVS_STATUS_BACKUP_DIR/$DATE ]; then
+    if [ ! -d /$HOME_DIR/$CSR_RVS_DIR/$CSR_RVS_STATUS_BACKUP_DIR/$DATE ]; 
+    then
         mkdir /$HOME_DIR/$CSR_RVS_DIR/$CSR_RVS_STATUS_BACKUP_DIR/$DATE
         echo "[CREATE TASK1-3] /$HOME_DIR/$CSR_RVS_DIR/$CSR_RVS_STATUS_BACKUP_DIR/$DATE"
         export RVS_PATH=/$HOME_DIR/$CSR_RVS_DIR/$CSR_RVS_STATUS_BACKUP_DIR/$DATE
@@ -59,7 +62,8 @@ cluster_state_backup() {
     date >> $RVS_PATH/cluster-history
     echo "---------------------------------------" >> $RVS_PATH/cluster-history
     podman ps -a | grep tmaxcloud >> $RVS_PATH/cluster-history
-    if [[ "$PODMAN_STATUS" == *"Exited"* ]]; then
+    if [[ "$PODMAN_STATUS" == *"Exited"* ]]; 
+    then
         echo "---------------------------------------" >> $RVS_PATH/cluster-issue-history
         echo "Podman Private Registry Issue" >> $RVS_PATH/cluster-issue-history
         date >> $RVS_PATH/cluster-issue-history
@@ -83,7 +87,8 @@ cluster_state_backup() {
     node_name_arr=($NODE_NAME)
     node_status_arr=($NODE_STATUS)
     b=1
-    for (( i=1; i<${#node_status_arr[@]}; i++ )); do
+    for (( i=1; i<${#node_status_arr[@]}; i++ )); 
+    do
         if [ ${node_status_arr[i]} != "Ready" ]
         then  
             if [[ $b -eq 1 ]];
@@ -109,7 +114,8 @@ cluster_state_backup() {
     pod_status_arr=($POD_STATUS)
     kubectl get pod --all-namespaces -o custom-columns=NAMESPACE:.metadata.namespace,NAME:.metadata.name,STATUS:.status.phase,NODE:.status.hostIP >> $RVS_PATH/cluster-history
     b=1
-    for (( i=1; i<${#pod_status_arr[@]}; i++ )); do
+    for (( i=1; i<${#pod_status_arr[@]}; i++ )); 
+    do
         if [ ${pod_status_arr[i]} != "Running" ] && [ ${pod_status_arr[i]} != "Completed" ]
         then        
             if [ $b -eq 1 ]
@@ -132,7 +138,8 @@ cluster_state_backup() {
     echo "---------------------------------------" >> $RVS_PATH/cluster-history
     kubectl describe nodes -A >> $RVS_PATH/cluster-history
     b=1
-    for (( i=1; i<${#node_status_arr[@]}; i++ )); do
+    for (( i=1; i<${#node_status_arr[@]}; i++ )); 
+    do
         if [ ${node_status_arr[i]} != "Ready" ]
         then
             if [ $b -eq 1 ]
@@ -155,7 +162,8 @@ cluster_state_backup() {
     echo "---------------------------------------" >> $RVS_PATH/cluster-history
     kubectl describe pod --all-namespaces >> $RVS_PATH/cluster-history
     b=1
-    for (( i=1; i<${#pod_status_arr[@]}; i++ )); do
+    for (( i=1; i<${#pod_status_arr[@]}; i++ )); 
+    do
         if [ ${pod_status_arr[i]} != "Running" ] && [ ${pod_status_arr[i]} != "Completed" ]
         then
             if [ $b -eq 1 ]
@@ -171,7 +179,8 @@ cluster_state_backup() {
     done
     echo "[COMPLETE] Pod Describe Checking"
     
-    if [ -d $RVS_PATH/cluster-issue-history ]; then
+    if [ -d $RVS_PATH/cluster-issue-history ]; 
+    then
         echo "[COMPLETE] $RVS_PATH/cluster-issue-history created"
     fi
     echo "[FINISH TASK2] $RVS_PATH/cluster-history created"
@@ -244,8 +253,10 @@ input_key() {
 
 check_selected() {
     if [ $1 = $2 ];
-    then echo " => "
-    else echo "    "
+    then 
+        echo " => "
+    else 
+        echo "    "
     fi
 }
 
@@ -264,21 +275,25 @@ select_menu() {
         printf "\n$ESC[2K[Copyright] Made by Jinwoo Shin (jinwoo_shin@tmax.co.kr)\n[Version] v1.0-20230131\n";
         INPUT=$(input_key);
         if [[ $INPUT = "" ]];
-        then break;
+        then 
+            break;
         fi
 
         if [[ $INPUT = $ESC[A ]];
-        then SELECTED=$(expr $SELECTED - 1);
+        then 
+            SELECTED=$(expr $SELECTED - 1);
         elif [[ $INPUT = $ESC[B ]];
-        then SELECTED=$(expr $SELECTED + 1);
+        then 
+            SELECTED=$(expr $SELECTED + 1);
         fi
 
         if [[ $SELECTED -lt $MIN_MENU ]];
-        then SELECTED=${MIN_MENU};
+        then 
+            SELECTED=${MIN_MENU};
         elif [[ $SELECTED -gt $MAX_MENU ]];
-        then SELECTED=${MAX_MENU};
+        then 
+            SELECTED=${MAX_MENU};
         fi
-
         printf "$ESC[$(expr $# + 3)A";
     done
     return `expr ${SELECTED}`;
@@ -286,7 +301,7 @@ select_menu() {
 
 select_menu_list() {
     if [ $COUNT -eq 0 ]
-        then
+    then
         arr_params=("README.md" "Create CSR-RVS Directory")
         echo -e "\nWelmcome! HyperCloud CSR RVS Helper\nChoose your job\n";
         select_menu "${arr_params[@]}";
@@ -294,11 +309,11 @@ select_menu_list() {
         SELECTED_MODE=${arr_params[${SELECTED}]};
        
         if [ $SELECTED -eq 1 ]
-            then
+        then
             cat ./README.md
             select_menu_list
         elif [ $SELECTED -eq 2 ]
-            then
+        then
             mkdir_backup_dir;
             select_menu_list
         fi
@@ -311,7 +326,7 @@ select_menu_list() {
         local SELECTED=$?;
         SELECTED_MODE=${arr_params[${SELECTED}]};
         if [ $SELECTED -eq 1 ]
-            then
+        then
             mv $RVS_PATH /$HOME_DIR/$CSR_RVS_DIR/$CSR_RVS_STATUS_BACKUP_DIR/$DATE_TIME
             echo "[RENAME] $RVS_PATH -> /$HOME_DIR/$CSR_RVS_DIR/$CSR_RVS_STATUS_BACKUP_DIR/$DATE_TIME"
             mkdir $RVS_PATH
@@ -320,7 +335,7 @@ select_menu_list() {
             ((COUNT+=1))
             select_menu_list
         elif [ $SELECTED -eq 2 ]
-            then
+        then
             ((COUNT+=1))
             echo "[SKIP] Use existing /$HOME_DIR/$CSR_RVS_DIR/$CSR_RVS_STATUS_BACKUP_DIR/$DATE"
             select_menu_list
