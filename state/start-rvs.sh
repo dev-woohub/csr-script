@@ -203,10 +203,14 @@ kube_cert_renew() {
     then
         echo "Kubernetes Version: $VERSION"
         kubeadm cert renew
+        kubectl delete pod -n kube-system kube-scheduler-$HOSTNAME kube-apiserver-$HOSTNAME kube-controller-manager-$HOSTNAME etcd-$HOSTNAME
+        cp -i /etc/kubernetes/admin.conf /root/.kube/config 
     elif [ $VERSION -ge 20 ]
     then
         echo "Kubernetes Version: $VERSION"
         kubeadm alpha certs renew
+        kubectl delete pod -n kube-system kube-scheduler-$HOSTNAME kube-apiserver-$HOSTNAME kube-controller-manager-$HOSTNAME etcd-$HOSTNAME
+        cp -i /etc/kubernetes/admin.conf /root/.kube/config 
     fi
 }
 
