@@ -272,7 +272,7 @@ select_menu() {
         do
             printf "$ESC[2K$(check_selected $i $SELECTED) $i. ${!i}\n";
         done
-        printf "\n$ESC[2K[Copyright] Made by Jinwoo Shin (jinwoo_shin@tmax.co.kr)\n[Version] v1.0-20230131\n";
+        printf "\n$ESC[2K[Version] v1.3.1-20230202\n[Copyright] Made by Jinwoo Shin(jinwoo_shin@tmax.co.kr) Geonho Kim(geonho_kim3@tmax.co.kr)\n";
         INPUT=$(input_key);
         if [[ $INPUT = "" ]];
         then 
