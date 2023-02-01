@@ -182,8 +182,48 @@ kube_cert_backup() {
     mkdir -p $RVS_PATH/cert-files
     KUBE_CERT_FILE_PATH=$RVS_PATH/cert-files
     cp -r /etc/kubernetes $KUBE_CERT_FILE_PATH
-    kubeadm certs check-expiration > $KUBE_CERT_FILE_PATH/check-expiration
+    
+    kube_ver
+    if [ $VERSION -le 19 ]
+    then
+        echo "Kubernetes Version: $VERSION"
+        kubeadm certs check-expiration > $KUBE_CERT_FILE_PATH/check-expiration
+    elif [ $VERSION -ge 20 ]
+    then
+        echo "Kubernetes Version: $VERSION"
+        kubeadm alpha certs check-expiration > $KUBE_CERT_FILE_PATH/check-expiration
+    fi
     echo "[FINISH TASK3] $KUBE_CERT_FILE_PATH/check-expiration created"
+}
+
+kube_cert_renew() {
+    echo "[START TASK3] Kubernetes cert renew on the Master1($HOSTNAME)"
+    kube_ver
+    if [ $VERSION -le 19 ]
+    then
+        echo "Kubernetes Version: $VERSION"
+        kubeadm cert renew
+    elif [ $VERSION -ge 20 ]
+    then
+        echo "Kubernetes Version: $VERSION"
+        kubeadm alpha certs renew
+    fi
+}
+
+kube_ver() {
+    ver=$(kubectl version -o json | jq ' .clientVersion | .minor? ')
+    temp="${ver%\"}"
+    temp="${temp#\"}"
+    VERSION=$((temp))
+    if [ $VERSION -le 19 ]
+    then
+        echo "Kubernetes Version: $VERSION"
+        kubeadm certs check-expiration > $KUBE_CERT_FILE_PATH/check-expiration
+    elif [ $VERSION -ge 20 ]
+    then
+        echo "Kubernetes Version: $VERSION"
+        kubeadm alpha certs check-expiration > $KUBE_CERT_FILE_PATH/check-expiration
+    fi
 }
 
 allnode_state_backup() {
@@ -258,6 +298,7 @@ select_menu_list() {
             mkdir_backup_dir;
             select_menu_list
         fi
+        
     elif [ $COUNT -eq 1 ]
     then
         arr_params=("Rename an existing Directory" "Use existing Directory");
@@ -284,28 +325,33 @@ select_menu_list() {
     elif [ $COUNT -eq 2 ]
     then
         echo $COUNT
-        arr_params=("Backup the cluster state on the Master1($HOSTNAME)" "Backup the Kubernetes cert file on the Master1($HOSTNAME)" "Create ETCD SnapShot on the Master1($HOSTNAME)" "State backup for each physical server");
+        arr_params=("Backup the cluster state on the Master1($HOSTNAME)" "Backup the Kubernetes cert file on the Master1($HOSTNAME)" "Create ETCD SnapShot on the Master1($HOSTNAME)" "State backup for each physical server" "Kubernetes cert renew");
         echo -e "\nWelmcome! HyperCloud CSR RVS Helper\nChoose your job\n";
         select_menu "${arr_params[@]}";
         local SELECTED=$?;
         SELECTED_MODE=${arr_params[${SELECTED}]};
         if [ $SELECTED -eq 1 ]
-            then
+        then
             cluster_state_backup;
             select_menu_list
         elif [ $SELECTED -eq 2 ]
-            then
+        then
             kube_cert_backup;
             select_menu_list
         elif [ $SELECTED -eq 3 ]
-            then
+        then
             ((COUNT+=2))
             select_menu_list
         elif [ $SELECTED -eq 4 ]
-            then
+        then
             ((COUNT+=1))
             select_menu_list
+        elif [ $SELECTED -eq 5 ]
+        then
+            kube_cert_renew;
+            select_menu_list
         fi
+        
     elif [ $COUNT -eq 3 ]
     then
         arr_params=("Deploy and Run All node state backup script" "Run All node state backup script" "Run $HOSTNAME state backup script");
@@ -316,14 +362,36 @@ select_menu_list() {
         if [ $SELECTED -eq 1 ]
         then
             cat commingsoon
+            ((COUNT-=1))
             select_menu_list
         elif [ $SELECTED -eq 2 ]
         then
             cat commingsoon
+            ((COUNT-=1))
             select_menu_list
         elif [ $SELECTED -eq 3 ]
         then
             cat commingsoon
+            ((COUNT-=1))
+            select_menu_list
+        fi
+        
+    elif [ $COUNT -eq 4 ]
+    then
+        arr_params=("ETCD POD" "ETCDCTL");
+        echo -e "\nWelmcome! HyperCloud CSR RVS Helper\nChoose your job\n";
+        select_menu "${arr_params[@]}";
+        local SELECTED=$?;
+        SELECTED_MODE=${arr_params[${SELECTED}]};
+        if [ $SELECTED -eq 1 ]
+        then
+            cat commingsoon
+            ((COUNT-=1))
+            select_menu_list
+        elif [ $SELECTED -eq 2 ]
+        then
+            cat commingsoon
+            ((COUNT-=1))
             select_menu_list
         fi
     fi
