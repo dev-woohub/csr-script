@@ -187,7 +187,7 @@ cluster_state_backup() {
 }
 
 kube_cert_backup() {
-    echo "[START TASK3] Backup the Kubernetes cert file on the Master1($HOSTNAME) - $RVS_PATH/cert-files"
+    echo "[START TASK2] Backup the Kubernetes cert file on the Master1($HOSTNAME) - $RVS_PATH/cert-files"
     mkdir -p $RVS_PATH/cert-files
     KUBE_CERT_FILE_PATH=$RVS_PATH/cert-files
     cp -r /etc/kubernetes $KUBE_CERT_FILE_PATH
@@ -202,7 +202,7 @@ kube_cert_backup() {
         echo "Kubernetes Version: $VERSION"
         kubeadm alpha certs check-expiration > $KUBE_CERT_FILE_PATH/check-expiration
     fi
-    echo "[FINISH TASK3] $KUBE_CERT_FILE_PATH/check-expiration created"
+    echo "[FINISH TASK2] $KUBE_CERT_FILE_PATH/check-expiration created"
 }
 
 kube_cert_renew() {
@@ -210,16 +210,20 @@ kube_cert_renew() {
     kube_ver
     if [ $VERSION -le 19 ]
     then
+        echo "[START TASK5] Kubernetes cert renew"
         echo "Kubernetes Version: $VERSION"
         kubeadm cert renew
         kubectl delete pod -n kube-system kube-scheduler-$HOSTNAME kube-apiserver-$HOSTNAME kube-controller-manager-$HOSTNAME etcd-$HOSTNAME
         cp -i /etc/kubernetes/admin.conf /root/.kube/config 
+        "[FINISH TASK5] $kubernetes cert renew"
     elif [ $VERSION -ge 20 ]
     then
+        echo "[START TASK5] Kubernetes cert renew"
         echo "Kubernetes Version: $VERSION"
         kubeadm alpha certs renew
         kubectl delete pod -n kube-system kube-scheduler-$HOSTNAME kube-apiserver-$HOSTNAME kube-controller-manager-$HOSTNAME etcd-$HOSTNAME
-        cp -i /etc/kubernetes/admin.conf /root/.kube/config 
+        cp -i /etc/kubernetes/admin.conf /root/.kube/config
+        echo "[FINISH TASK5] $kubernetes cert renew"
     fi
 }
 
@@ -237,6 +241,18 @@ kube_ver() {
         echo "Kubernetes Version: $VERSION"
         kubeadm alpha certs check-expiration > $KUBE_CERT_FILE_PATH/check-expiration
     fi
+}
+
+etcd_snapshot() {
+    if [ -f $RVS_PATH/etcd-$DATE.db ];
+    then
+        echo "[RENAME] $RVS_PATH/etcd-$DATE.db -> $RVS_PATH/etcd-$DATE_TIME.db"
+        mv $RVS_PATH/etcd-$DATE.db $RVS_PATH/etcd-$DATE_TIME.db
+    fi
+    echo "[START TASK3] Create ETCD SnapShot on the Master1($HOSTNAME)"
+    kubectl exec -it -n kube-system etcd-$HOSTNAME sh -- etcdctl --endpoints=https://127.0.0.1:2379 --cacert=/etc/kubernetes/ssl/etcd/ca.crt --cert=/etc/kubernetes/ssl/etcd/server.crt --key=/etc/kubernetes/ssl/etcd/server.key snapshot save /tmp/etcd-$DATE.db
+    kubectl cp -n kube-system etcd-$HOSTNAME:/tmp/etcd-$DATE.db $RVS_PATH/etcd-$DATE.db
+    echo "[FINISH TASK3] $RVS_PATH/etcd-$DATE.db created"
 }
 
 allnode_state_backup() {
@@ -272,7 +288,7 @@ select_menu() {
         do
             printf "$ESC[2K$(check_selected $i $SELECTED) $i. ${!i}\n";
         done
-        printf "\n$ESC[2K[Version] v1.3.1-20230202\n[Copyright] Made by Jinwoo Shin(jinwoo_shin@tmax.co.kr) Geonho Kim(geonho_kim3@tmax.co.kr)\n";
+        printf "\n$ESC[2K[Version] v1.4-20230202\n[Copyright] Made by Jinwoo Shin(jinwoo_shin@tmax.co.kr) Geonho Kim(geonho_kim3@tmax.co.kr)\n";
         INPUT=$(input_key);
         if [[ $INPUT = "" ]];
         then 
@@ -359,7 +375,7 @@ select_menu_list() {
             select_menu_list
         elif [ $SELECTED -eq 3 ]
         then
-            ((COUNT+=2))
+            etcd_snapshot;
             select_menu_list
         elif [ $SELECTED -eq 4 ]
         then
@@ -367,7 +383,7 @@ select_menu_list() {
             select_menu_list
         elif [ $SELECTED -eq 5 ]
         then
-            kube_cert_renew;
+            ((COUNT+=2))
             select_menu_list
         fi
         
@@ -394,10 +410,9 @@ select_menu_list() {
             ((COUNT-=1))
             select_menu_list
         fi
-        
     elif [ $COUNT -eq 4 ]
     then
-        arr_params=("ETCD POD" "ETCDCTL");
+        arr_params=("Deploy and Run All Master Node Kubernetes cert renew script" "Run All Master Node Kubernetes cert renew script" "Run $HOSTNAME Kubernetes cert renew  script");
         echo -e "\nWelmcome! HyperCloud CSR RVS Helper\nChoose your job\n";
         select_menu "${arr_params[@]}";
         local SELECTED=$?;
@@ -405,12 +420,17 @@ select_menu_list() {
         if [ $SELECTED -eq 1 ]
         then
             cat commingsoon
-            ((COUNT-=2))
+            ((COUNT-=1))
             select_menu_list
         elif [ $SELECTED -eq 2 ]
         then
             cat commingsoon
-            ((COUNT-=2))
+            ((COUNT-=1))
+            select_menu_list
+        elif [ $SELECTED -eq 2 ]
+        then
+            kube_cert_renew;
+            ((COUNT-=1))
             select_menu_list
         fi
     fi
